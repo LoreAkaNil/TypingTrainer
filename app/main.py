@@ -1,0 +1,356 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+from pathlib import Path
+
+from app.service import TypingTrainerService
+from app.settings_manager import SettingsManager
+from app.translations import LANGUAGE_FILES, UI_TRANSLATIONS
+from app.views.menu_view import MenuView
+from app.views.settings_view import SettingsView
+from app.views.survival_view import SurvivalView
+
+
+class TypingTrainerApp:
+    def __init__(self, root: tk.Tk) -> None:
+        self.root = root
+        self.root.geometry("1280x720")
+        self.root.minsize(1000, 650)
+
+        self.base_dir = Path(__file__).resolve().parent.parent
+        self.service = TypingTrainerService()
+        self.settings_manager = SettingsManager(self.base_dir)
+
+        self.timer_job = None
+
+        self.language_files = LANGUAGE_FILES
+        self.ui_translations = UI_TRANSLATIONS
+
+        self.app_language_var = tk.StringVar(value="Italiano")
+        self.typing_language_var = tk.StringVar(value="Italiano")
+        self.words_count_var = tk.IntVar(value=15)
+        self.screen_mode_var = tk.StringVar(value="Windowed 1280x720")
+        self.ui_scale_var = tk.StringVar(value="100%")
+
+        self.wpm_var = tk.StringVar(value="0")
+        self.accuracy_var = tk.StringVar(value="100.0%")
+        self.errors_var = tk.StringVar(value="0")
+        self.time_var = tk.StringVar(value="0.0 s")
+        self.progress_var = tk.StringVar(value="0 / 0")
+
+        self.target_box = None
+        self.input_box = None
+        self.custom_text_box = None
+
+        self.load_settings()
+
+        self.container = ttk.Frame(self.root)
+        self.container.pack(fill="both", expand=True)
+        self.current_frame = None
+
+        self.service.set_language(self.typing_language_var.get())
+        self.apply_screen_mode()
+        self.refresh_title()
+        self.show_main_menu()
+
+        self.root.bind("<Escape>", self.on_escape)
+
+    # =========================
+    # SETTINGS PERSISTENCE
+    # =========================
+    def load_settings(self) -> None:
+        settings = self.settings_manager.load()
+        self.app_language_var.set(settings["app_language"])
+        self.typing_language_var.set(settings["typing_language"])
+        self.screen_mode_var.set(settings["screen_mode"])
+        self.ui_scale_var.set(settings["ui_scale"])
+        self.words_count_var.set(settings["words_count"])
+
+    def save_settings(self) -> None:
+        try:
+            self.settings_manager.save(
+                app_language=self.app_language_var.get(),
+                typing_language=self.typing_language_var.get(),
+                screen_mode=self.screen_mode_var.get(),
+                ui_scale=self.ui_scale_var.get(),
+                words_count=self.words_count_var.get(),
+            )
+        except Exception as error:
+            messagebox.showerror(self.tr("error"), f"{self.tr('settings_save_error')}:\n{error}")
+
+    # =========================
+    # TRANSLATIONS / SCALE
+    # =========================
+    def tr(self, key: str) -> str:
+        lang = self.app_language_var.get()
+        return self.ui_translations.get(lang, self.ui_translations["English"]).get(key, key)
+
+    def get_scale_factor(self) -> float:
+        mapping = {
+            "75%": 0.75,
+            "100%": 1.0,
+            "125%": 1.25,
+            "150%": 1.5,
+        }
+        return mapping.get(self.ui_scale_var.get(), 1.0)
+
+    def scaled(self, value: int) -> int:
+        return max(1, int(value * self.get_scale_factor()))
+
+    def refresh_title(self) -> None:
+        self.root.title(self.tr("app_title"))
+
+    # =========================
+    # SCREEN
+    # =========================
+    def apply_screen_mode(self) -> None:
+        mode = self.screen_mode_var.get()
+
+        self.root.attributes("-fullscreen", False)
+
+        if mode == "Windowed 1280x720":
+            self.root.state("normal")
+            self.root.geometry("1280x720")
+        elif mode == "Windowed 1920x1080":
+            self.root.state("normal")
+            self.root.geometry("1920x1080")
+        elif mode == "Maximized":
+            self.root.state("zoomed")
+        elif mode == "Fullscreen":
+            self.root.state("normal")
+            self.root.attributes("-fullscreen", True)
+
+    def on_escape(self, event=None) -> None:
+        if self.root.attributes("-fullscreen"):
+            self.root.attributes("-fullscreen", False)
+            self.screen_mode_var.set("Windowed 1280x720")
+            self.root.geometry("1280x720")
+            self.save_settings()
+
+    # =========================
+    # FRAME MGMT
+    # =========================
+    def clear_current_frame(self) -> None:
+        if self.current_frame is not None:
+            self.current_frame.destroy()
+            self.current_frame = None
+
+        self.target_box = None
+        self.input_box = None
+        self.custom_text_box = None
+
+    def show_main_menu(self) -> None:
+        self.clear_current_frame()
+        self.refresh_title()
+        self.current_frame = MenuView(self).build()
+
+    def show_settings_menu(self) -> None:
+        self.clear_current_frame()
+        self.refresh_title()
+        self.current_frame = SettingsView(self).build()
+
+    def show_survival_mode(self) -> None:
+        self.clear_current_frame()
+        self.refresh_title()
+        self.current_frame = SurvivalView(self).build()
+        self.load_generated_text()
+
+    # =========================
+    # SETTINGS ACTIONS
+    # =========================
+    def bind_mousewheel(self, canvas: tk.Canvas) -> None:
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+    def apply_settings(self) -> None:
+        self.service.set_language(self.typing_language_var.get())
+        self.apply_screen_mode()
+        self.refresh_title()
+        self.save_settings()
+        messagebox.showinfo(self.tr("settings"), self.tr("settings_applied"))
+        self.show_settings_menu()
+
+    # =========================
+    # SURVIVAL ACTIONS
+    # =========================
+    def _add_stat_row(self, parent: ttk.Widget, row: int, label: str, variable: tk.StringVar) -> None:
+        ttk.Label(parent, text=label, font=("Segoe UI", self.scaled(12), "bold")).grid(
+            row=row, column=0, sticky="w", pady=self.scaled(8)
+        )
+        ttk.Label(parent, textvariable=variable, font=("Segoe UI", self.scaled(12))).grid(
+            row=row, column=1, sticky="e", pady=self.scaled(8)
+        )
+
+    def on_language_change(self, event=None) -> None:
+        self.service.set_language(self.typing_language_var.get())
+        self.save_settings()
+        self.load_generated_text()
+
+    def load_generated_text(self) -> None:
+        try:
+            self.service.set_language(self.typing_language_var.get())
+            generated = self.service.generate_text(self.words_count_var.get())
+        except Exception as error:
+            messagebox.showerror(self.tr("error"), str(error))
+            return
+
+        if self.target_box is not None:
+            self._set_target_text(generated)
+
+        self._reset_ui_stats()
+
+        if self.input_box is not None:
+            self.input_box.delete("1.0", "end")
+            self.input_box.focus_set()
+
+    def use_custom_text(self) -> None:
+        if self.custom_text_box is None or self.input_box is None:
+            return
+
+        custom_text = self.custom_text_box.get("1.0", "end").strip()
+        if not custom_text:
+            messagebox.showwarning(self.tr("warning"), self.tr("insert_custom_text"))
+            return
+
+        self.service.set_custom_text(custom_text)
+        self._set_target_text(custom_text)
+        self._reset_ui_stats()
+        self.input_box.delete("1.0", "end")
+        self.input_box.focus_set()
+
+    def restart_test(self) -> None:
+        if self.input_box is None:
+            return
+
+        current_target = self.service.stats.target_text
+        if not current_target:
+            self.load_generated_text()
+            return
+
+        self.service.reset_progress_only()
+        self._set_target_text(self.service.stats.target_text)
+        self._reset_ui_stats()
+        self.input_box.delete("1.0", "end")
+        self.input_box.focus_set()
+
+        if self.timer_job is not None:
+            self.root.after_cancel(self.timer_job)
+            self.timer_job = None
+
+    def _set_target_text(self, text: str) -> None:
+        if self.target_box is None:
+            return
+
+        self.target_box.config(state="normal")
+        self.target_box.delete("1.0", "end")
+        self.target_box.insert("1.0", text)
+        self.target_box.config(state="disabled")
+
+    def _reset_ui_stats(self) -> None:
+        self.wpm_var.set("0")
+        self.accuracy_var.set("100.0%")
+        self.errors_var.set("0")
+        self.time_var.set("0.0 s")
+        self.progress_var.set(f"0 / {len(self.service.stats.target_text)}")
+        if self.target_box is not None:
+            self._clear_highlighting()
+
+    def _clear_highlighting(self) -> None:
+        if self.target_box is None:
+            return
+
+        self.target_box.config(state="normal")
+        self.target_box.tag_delete("correct")
+        self.target_box.tag_delete("incorrect")
+        self.target_box.tag_delete("pending")
+        self.target_box.config(state="disabled")
+
+    def on_key_release(self, event=None) -> None:
+        if self.input_box is None:
+            return
+
+        typed_text = self.input_box.get("1.0", "end-1c")
+        self.service.update_typed_text(typed_text)
+        self._refresh_stats()
+        self._highlight_text()
+
+        if self.service.stats.started and self.timer_job is None and not self.service.stats.finished:
+            self._update_timer()
+
+        if self.service.stats.finished:
+            if self.timer_job is not None:
+                self.root.after_cancel(self.timer_job)
+                self.timer_job = None
+
+            messagebox.showinfo(
+                self.tr("completed"),
+                f"WPM: {self.service.stats.wpm}\n"
+                f"{self.tr('accuracy')} {self.service.stats.accuracy}%\n"
+                f"{self.tr('errors')} {self.service.stats.errors}\n"
+                f"{self.tr('time')} {self.service.stats.elapsed_seconds:.1f} s"
+            )
+
+    def _update_timer(self) -> None:
+        if self.service.stats.started and not self.service.stats.finished:
+            self.time_var.set(f"{self.service.stats.elapsed_seconds:.1f} s")
+            self.timer_job = self.root.after(100, self._update_timer)
+
+    def _refresh_stats(self) -> None:
+        stats = self.service.stats
+        self.wpm_var.set(str(stats.wpm))
+        self.accuracy_var.set(f"{stats.accuracy}%")
+        self.errors_var.set(str(stats.errors))
+        self.time_var.set(f"{stats.elapsed_seconds:.1f} s")
+        self.progress_var.set(self.service.get_progress_text())
+
+    def _highlight_text(self) -> None:
+        if self.target_box is None:
+            return
+
+        typed = self.service.stats.typed_text
+        target = self.service.stats.target_text
+
+        self.target_box.config(state="normal")
+        self.target_box.tag_remove("correct", "1.0", "end")
+        self.target_box.tag_remove("incorrect", "1.0", "end")
+        self.target_box.tag_remove("pending", "1.0", "end")
+
+        self.target_box.tag_configure("correct", background="#d8f3dc")
+        self.target_box.tag_configure("incorrect", background="#ffccd5")
+        self.target_box.tag_configure("pending", background="#f5f5f5")
+
+        correct_until = 0
+        for i, char in enumerate(typed):
+            if i < len(target) and char == target[i]:
+                correct_until += 1
+            else:
+                break
+
+        mismatch_start = correct_until
+        mismatch_end = min(len(typed), len(target))
+
+        if correct_until > 0:
+            self.target_box.tag_add("correct", "1.0", f"1.0 + {correct_until} chars")
+
+        if mismatch_end > mismatch_start:
+            self.target_box.tag_add(
+                "incorrect",
+                f"1.0 + {mismatch_start} chars",
+                f"1.0 + {mismatch_end} chars"
+            )
+
+        if len(target) > mismatch_end:
+            self.target_box.tag_add(
+                "pending",
+                f"1.0 + {mismatch_end} chars",
+                f"1.0 + {len(target)} chars"
+            )
+
+        self.target_box.config(state="disabled")
+
+
+def main() -> None:
+    root = tk.Tk()
+    app = TypingTrainerApp(root)
+    root.mainloop()
