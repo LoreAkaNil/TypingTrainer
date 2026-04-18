@@ -6,7 +6,6 @@ from typing import Any
 class SettingsManager:
     VALID_SCREEN_MODES = [
         "Windowed 1280x720",
-        "Windowed 1920x1080",
         "Maximized",
         "Fullscreen",
     ]

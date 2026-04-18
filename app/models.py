@@ -14,3 +14,6 @@ class TestStats:
     started: bool = False
     finished: bool = False
     start_time: Optional[float] = None
+
+    mistakes_made: int = 0
+    max_errors: int = 3

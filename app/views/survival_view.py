@@ -21,15 +21,19 @@ class SurvivalView:
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(1, weight=1)
 
+        # =========================
+        # TOP BAR
+        # =========================
         top_frame = ttk.Frame(frame)
         top_frame.grid(row=0, column=0, sticky="ew", pady=(0, self.app.scaled(10)))
         top_frame.columnconfigure(20, weight=1)
 
-        ttk.Button(
+        self.menu_button = ttk.Button(
             top_frame,
-            text=self.app.tr("menu_button"),
-            command=self.app.show_main_menu
-        ).grid(row=0, column=0, padx=(0, self.app.scaled(12)))
+            text="☰ Menu",
+            command=self.open_hamburger_menu
+        )
+        self.menu_button.grid(row=0, column=0, padx=(0, self.app.scaled(12)))
 
         ttk.Label(
             top_frame,
@@ -49,56 +53,72 @@ class SurvivalView:
         language_box.grid(row=0, column=3, padx=4)
         language_box.bind("<<ComboboxSelected>>", self.app.on_language_change)
 
-        ttk.Label(top_frame, text="N° parole:").grid(row=0, column=4, padx=4)
+        ttk.Label(top_frame, text=self.app.tr("word_count")).grid(row=0, column=4, padx=4)
 
         words_spin = ttk.Spinbox(
             top_frame,
             from_=5,
-            to=50,
+            to=500,
             textvariable=self.app.words_count_var,
             width=6
         )
         words_spin.grid(row=0, column=5, padx=4)
+        words_spin.bind("<Return>", self.on_word_count_enter)
 
-        ttk.Button(top_frame, text=self.app.tr("generate_test"), command=self.app.load_generated_text).grid(row=0, column=6, padx=4)
-        ttk.Button(top_frame, text=self.app.tr("use_custom_text"), command=self.app.use_custom_text).grid(row=0, column=7, padx=4)
-        ttk.Button(top_frame, text=self.app.tr("restart"), command=self.app.restart_test).grid(row=0, column=8, padx=4)
-        ttk.Button(top_frame, text=self.app.tr("settings"), command=self.app.show_settings_menu).grid(row=0, column=9, padx=4)
+        ttk.Button(
+            top_frame,
+            text=self.app.tr("restart"),
+            command=self.app.restart_test
+        ).grid(row=0, column=6, padx=4)
 
+        ttk.Button(
+            top_frame,
+            text=self.app.tr("end_run"),
+            command=self.app.end_run
+        ).grid(row=0, column=7, padx=4)
+
+        # =========================
+        # MAIN AREA
+        # =========================
         main_frame = ttk.Frame(frame)
         main_frame.grid(row=1, column=0, sticky="nsew")
         main_frame.columnconfigure(0, weight=3)
         main_frame.columnconfigure(1, weight=2)
-        main_frame.rowconfigure(1, weight=5)
-        main_frame.rowconfigure(3, weight=2)
 
+        # solo una riga "spacer" finale espandibile
+        main_frame.rowconfigure(4, weight=1)
+        main_frame.rowconfigure(5, weight=2)
+        
+        # -------------------------
+        # LEFT COLUMN
+        # -------------------------
         ttk.Label(
             main_frame,
             text=self.app.tr("typing_text"),
             font=("Segoe UI", self.app.scaled(12), "bold")
         ).grid(row=0, column=0, sticky="w", pady=(0, self.app.scaled(8)))
 
+        target_container = ttk.Frame(main_frame)
+        target_container.grid(row=1, column=0, sticky="ew", padx=(0, self.app.scaled(16)))
+        target_container.columnconfigure(0, weight=1)
+
         self.app.target_box = tk.Text(
-            main_frame,
+            target_container,
             wrap="word",
-            height=10,
-            font=("Consolas", self.app.scaled(18)),
-            padx=self.app.scaled(14),
-            pady=self.app.scaled(14),
+            height=4,
+            font=("Consolas", self.app.scaled(20)),
+            padx=self.app.scaled(16),
+            pady=self.app.scaled(16),
             state="disabled",
-            bg="#f5f5f5"
+            bg="#ffffff",
+            relief="solid",
+            bd=1
         )
-        self.app.target_box.grid(row=1, column=0, sticky="nsew", padx=(0, self.app.scaled(16)))
+        self.app.target_box.grid(row=0, column=0, sticky="ew")
 
-        stats_frame = ttk.LabelFrame(main_frame, text=self.app.tr("stats"), padding=self.app.scaled(14))
-        stats_frame.grid(row=1, column=1, sticky="nsew")
-        stats_frame.columnconfigure(1, weight=1)
-
-        self.app._add_stat_row(stats_frame, 0, self.app.tr("wpm"), self.app.wpm_var)
-        self.app._add_stat_row(stats_frame, 1, self.app.tr("accuracy"), self.app.accuracy_var)
-        self.app._add_stat_row(stats_frame, 2, self.app.tr("errors"), self.app.errors_var)
-        self.app._add_stat_row(stats_frame, 3, self.app.tr("time"), self.app.time_var)
-        self.app._add_stat_row(stats_frame, 4, self.app.tr("progress"), self.app.progress_var)
+        target_scrollbar = ttk.Scrollbar(target_container, orient="vertical", command=self.app.target_box.yview)
+        target_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.app.target_box.configure(yscrollcommand=target_scrollbar.set)
 
         ttk.Label(
             main_frame,
@@ -107,29 +127,74 @@ class SurvivalView:
         ).grid(row=2, column=0, sticky="w", pady=(self.app.scaled(14), self.app.scaled(8)))
 
         input_container = ttk.Frame(main_frame)
-        input_container.grid(row=3, column=0, sticky="nsew", padx=(0, self.app.scaled(16)))
+        input_container.grid(row=3, column=0, sticky="ew", padx=(0, self.app.scaled(16)))
         input_container.columnconfigure(0, weight=1)
-        input_container.rowconfigure(0, weight=1)
 
         self.app.input_box = tk.Text(
             input_container,
             wrap="word",
-            height=5,
-            font=("Consolas", self.app.scaled(16)),
-            padx=self.app.scaled(14),
-            pady=self.app.scaled(14)
+            height=3,
+            font=("Consolas", self.app.scaled(18)),
+            padx=self.app.scaled(16),
+            pady=self.app.scaled(16),
+            relief="solid",
+            bd=1
         )
-        self.app.input_box.grid(row=0, column=0, sticky="nsew")
+        self.app.input_box.grid(row=0, column=0, sticky="ew")
         self.app.input_box.bind("<KeyRelease>", self.app.on_key_release)
 
         input_scrollbar = ttk.Scrollbar(input_container, orient="vertical", command=self.app.input_box.yview)
         input_scrollbar.grid(row=0, column=1, sticky="ns")
         self.app.input_box.configure(yscrollcommand=input_scrollbar.set)
+        
+        # =========================
+        # BOTTOM AREA (futura tastiera / feedback)
+        # =========================
+        bottom_container = ttk.Frame(main_frame)
+        bottom_container.grid(
+            row=5,
+            column=0,
+            sticky="nsew",
+            padx=(0, self.app.scaled(16)),
+            pady=(self.app.scaled(12), 0)
+        )
+        bottom_container.columnconfigure(0, weight=1)
+        bottom_container.rowconfigure(0, weight=1)
 
-        custom_frame = ttk.LabelFrame(main_frame, text=self.app.tr("custom_text"), padding=self.app.scaled(14))
-        custom_frame.grid(row=3, column=1, sticky="nsew")
+        self.bottom_placeholder = ttk.Label(
+            bottom_container,
+            text="(area futura tastiera / feedback)",
+            anchor="center",
+            foreground="#888"
+        )
+        self.bottom_placeholder.grid(row=0, column=0, sticky="nsew")
+
+        # -------------------------
+        # RIGHT COLUMN
+        # -------------------------
+        stats_frame = ttk.LabelFrame(
+            main_frame,
+            text=self.app.tr("stats"),
+            padding=self.app.scaled(14)
+        )
+        stats_frame.grid(row=0, column=1, rowspan=2, sticky="new")
+        stats_frame.columnconfigure(1, weight=1)
+
+        self.app._add_stat_row(stats_frame, 0, self.app.tr("wpm"), self.app.wpm_var)
+        self.app._add_stat_row(stats_frame, 1, self.app.tr("accuracy"), self.app.accuracy_var)
+        self.app._add_stat_row(stats_frame, 2, self.app.tr("errors"), self.app.errors_var)
+        self.app._add_stat_row(stats_frame, 3, self.app.tr("error_limit"), self.app.error_limit_var)
+        self.app._add_stat_row(stats_frame, 4, self.app.tr("time"), self.app.time_var)
+        self.app._add_stat_row(stats_frame, 5, self.app.tr("progress"), self.app.progress_var)
+
+        custom_frame = ttk.LabelFrame(
+            main_frame,
+            text=self.app.tr("custom_text"),
+            padding=self.app.scaled(14)
+        )
+        custom_frame.grid(row=3, column=1, sticky="new")
         custom_frame.columnconfigure(0, weight=1)
-        custom_frame.rowconfigure(1, weight=1)
+        custom_frame.rowconfigure(2, weight=1)
 
         ttk.Label(
             custom_frame,
@@ -138,8 +203,23 @@ class SurvivalView:
             justify="left"
         ).grid(row=0, column=0, sticky="w", pady=(0, self.app.scaled(8)))
 
+        custom_buttons = ttk.Frame(custom_frame)
+        custom_buttons.grid(row=1, column=0, sticky="w", pady=(0, self.app.scaled(8)))
+
+        ttk.Button(
+            custom_buttons,
+            text=self.app.tr("use_custom_text"),
+            command=self.app.use_custom_text
+        ).pack(side="left", padx=(0, self.app.scaled(8)))
+
+        ttk.Button(
+            custom_buttons,
+            text=self.app.tr("import_txt"),
+            command=self.app.import_text_file
+        ).pack(side="left")
+
         custom_container = ttk.Frame(custom_frame)
-        custom_container.grid(row=1, column=0, sticky="nsew")
+        custom_container.grid(row=2, column=0, sticky="nsew")
         custom_container.columnconfigure(0, weight=1)
         custom_container.rowconfigure(0, weight=1)
 
@@ -163,3 +243,17 @@ class SurvivalView:
         footer.grid(row=2, column=0, sticky="w")
 
         return frame
+
+    def open_hamburger_menu(self):
+        menu = tk.Menu(self.app.container, tearoff=0)
+        menu.add_command(label=self.app.tr("main_menu"), command=self.app.show_main_menu)
+        menu.add_command(label=self.app.tr("settings"), command=self.app.show_settings_menu)
+
+        x = self.menu_button.winfo_rootx()
+        y = self.menu_button.winfo_rooty() + self.menu_button.winfo_height()
+
+        menu.tk_popup(x, y)
+
+    def on_word_count_enter(self, event=None):
+        self.app.load_generated_text()
+        self.app.input_box.focus_set()

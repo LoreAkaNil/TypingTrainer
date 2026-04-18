@@ -55,42 +55,27 @@ class SettingsView:
 
         ttk.Label(
             scrollable_frame,
-            text=self.app.tr("typing_language"),
-            font=("Segoe UI", self.app.scaled(12), "bold")
-        ).grid(row=2, column=0, sticky="e", padx=self.app.scaled(10), pady=self.app.scaled(10))
-
-        ttk.Combobox(
-            scrollable_frame,
-            textvariable=self.app.typing_language_var,
-            values=list(self.app.language_files.keys()),
-            state="readonly",
-            width=25
-        ).grid(row=2, column=1, sticky="w", padx=self.app.scaled(10), pady=self.app.scaled(10))
-
-        ttk.Label(
-            scrollable_frame,
             text=self.app.tr("screen_mode"),
             font=("Segoe UI", self.app.scaled(12), "bold")
-        ).grid(row=3, column=0, sticky="e", padx=self.app.scaled(10), pady=self.app.scaled(10))
+        ).grid(row=2, column=0, sticky="e", padx=self.app.scaled(10), pady=self.app.scaled(10))
 
         ttk.Combobox(
             scrollable_frame,
             textvariable=self.app.screen_mode_var,
             values=[
                 "Windowed 1280x720",
-                "Windowed 1920x1080",
                 "Maximized",
                 "Fullscreen",
             ],
             state="readonly",
             width=25
-        ).grid(row=3, column=1, sticky="w", padx=self.app.scaled(10), pady=self.app.scaled(10))
+        ).grid(row=2, column=1, sticky="w", padx=self.app.scaled(10), pady=self.app.scaled(10))
 
         ttk.Label(
             scrollable_frame,
             text=self.app.tr("ui_scale"),
             font=("Segoe UI", self.app.scaled(12), "bold")
-        ).grid(row=4, column=0, sticky="e", padx=self.app.scaled(10), pady=self.app.scaled(10))
+        ).grid(row=3, column=0, sticky="e", padx=self.app.scaled(10), pady=self.app.scaled(10))
 
         ttk.Combobox(
             scrollable_frame,
@@ -98,17 +83,17 @@ class SettingsView:
             values=["75%", "100%", "125%", "150%"],
             state="readonly",
             width=25
-        ).grid(row=4, column=1, sticky="w", padx=self.app.scaled(10), pady=self.app.scaled(10))
+        ).grid(row=3, column=1, sticky="w", padx=self.app.scaled(10), pady=self.app.scaled(10))
 
         ttk.Label(
             scrollable_frame,
             text=self.app.tr("note_text"),
             font=("Segoe UI", self.app.scaled(11)),
             justify="left"
-        ).grid(row=5, column=0, columnspan=2, pady=(self.app.scaled(20), self.app.scaled(30)))
+        ).grid(row=4, column=0, columnspan=2, pady=(self.app.scaled(20), self.app.scaled(30)))
 
         buttons_frame = ttk.Frame(scrollable_frame)
-        buttons_frame.grid(row=6, column=0, columnspan=2, pady=self.app.scaled(20))
+        buttons_frame.grid(row=5, column=0, columnspan=2, pady=self.app.scaled(20))
 
         ttk.Button(
             buttons_frame,

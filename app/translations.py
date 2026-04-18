@@ -25,7 +25,7 @@ UI_TRANSLATIONS = {
             "Note:\n"
             "- Fullscreen: premi ESC per uscire.\n"
             "- La lingua applicazione traduce tutta l'interfaccia.\n"
-            "- La lingua dizionario cambia le parole da digitare.\n"
+            "- La lingua dizionario si sceglie nella modalità Survival.\n"
             "- La scala interfaccia modifica font e dimensioni generali."
         ),
         "menu_button": "← Menu",
@@ -33,22 +33,32 @@ UI_TRANSLATIONS = {
         "typing_text": "Testo da scrivere:",
         "your_input": "Il tuo input:",
         "custom_text": "Testo personalizzato",
-        "custom_text_hint": "Scrivi o incolla un testo qui sotto e premi 'Usa Testo Custom'.",
+        "custom_text_hint": "Scrivi o incolla un testo qui sotto, oppure importa un file .txt.",
         "generate_test": "Genera Test",
         "use_custom_text": "Usa Testo Custom",
+        "import_txt": "Importa TXT",
         "restart": "Restart",
+        "end_run": "Termina",
         "stats": "Statistiche",
         "wpm": "WPM:",
         "accuracy": "Accuracy:",
-        "errors": "Errori:",
+        "errors": "Errori attuali:",
+        "error_limit": "Limite errori:",
         "time": "Tempo:",
         "progress": "Progresso:",
-        "survival_footer": "Modalità Survival: scrivi finché vuoi, cambia lingua, genera nuovi test o usa testo personalizzato.",
+        "word_count": "N° parole:",
+        "survival_footer": "Modalità Survival: scrivi finché vuoi, genera nuovi test o usa testo personalizzato.",
         "warning": "Attenzione",
         "insert_custom_text": "Inserisci prima un testo personalizzato.",
         "error": "Errore",
         "completed": "Test completato",
+        "game_over": "Game Over",
+        "session_ended": "Sessione terminata",
+        "game_over_message": "Hai raggiunto il limite di errori. Sessione terminata.",
+        "session_ended_message": "Sessione terminata manualmente.",
         "settings_save_error": "Impossibile salvare le impostazioni",
+        "select_text_file": "Seleziona un file di testo",
+        "invalid_text_file": "Impossibile leggere il file selezionato.",
     },
     "English": {
         "app_title": "Typing Trainer",
@@ -71,7 +81,7 @@ UI_TRANSLATIONS = {
             "Notes:\n"
             "- Fullscreen: press ESC to exit.\n"
             "- Application language translates the whole interface.\n"
-            "- Typing language changes the words you type.\n"
+            "- Typing language is selected inside Survival mode.\n"
             "- UI scale changes fonts and general sizing."
         ),
         "menu_button": "← Menu",
@@ -79,21 +89,31 @@ UI_TRANSLATIONS = {
         "typing_text": "Text to type:",
         "your_input": "Your input:",
         "custom_text": "Custom text",
-        "custom_text_hint": "Write or paste text below and press 'Use Custom Text'.",
+        "custom_text_hint": "Write or paste text below, or import a .txt file.",
         "generate_test": "Generate Test",
         "use_custom_text": "Use Custom Text",
+        "import_txt": "Import TXT",
         "restart": "Restart",
+        "end_run": "End Run",
         "stats": "Stats",
         "wpm": "WPM:",
         "accuracy": "Accuracy:",
-        "errors": "Errors:",
+        "errors": "Current errors:",
+        "error_limit": "Error limit:",
         "time": "Time:",
         "progress": "Progress:",
-        "survival_footer": "Survival mode: type as long as you want, change language, generate new tests or use custom text.",
+        "word_count": "Word count:",
+        "survival_footer": "Survival mode: type as long as you want, generate new tests or use custom text.",
         "warning": "Warning",
         "insert_custom_text": "Enter some custom text first.",
         "error": "Error",
         "completed": "Test complete",
+        "game_over": "Game Over",
+        "session_ended": "Session ended",
+        "game_over_message": "You reached the error limit. Session ended.",
+        "session_ended_message": "Session ended manually.",
         "settings_save_error": "Unable to save settings",
+        "select_text_file": "Select a text file",
+        "invalid_text_file": "Unable to read the selected file.",
     },
 }

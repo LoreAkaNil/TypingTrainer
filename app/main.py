@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from pathlib import Path
 
 from app.service import TypingTrainerService
@@ -34,6 +34,7 @@ class TypingTrainerApp:
         self.wpm_var = tk.StringVar(value="0")
         self.accuracy_var = tk.StringVar(value="100.0%")
         self.errors_var = tk.StringVar(value="0")
+        self.error_limit_var = tk.StringVar(value="0 / 3")
         self.time_var = tk.StringVar(value="0.0 s")
         self.progress_var = tk.StringVar(value="0 / 0")
 
@@ -110,9 +111,6 @@ class TypingTrainerApp:
         if mode == "Windowed 1280x720":
             self.root.state("normal")
             self.root.geometry("1280x720")
-        elif mode == "Windowed 1920x1080":
-            self.root.state("normal")
-            self.root.geometry("1920x1080")
         elif mode == "Maximized":
             self.root.state("zoomed")
         elif mode == "Fullscreen":
@@ -153,10 +151,11 @@ class TypingTrainerApp:
         self.refresh_title()
         self.current_frame = SurvivalView(self).build()
         self.load_generated_text()
-
+        
     # =========================
     # SETTINGS ACTIONS
     # =========================
+    
     def bind_mousewheel(self, canvas: tk.Canvas) -> None:
         def _on_mousewheel(event):
             canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
@@ -164,12 +163,36 @@ class TypingTrainerApp:
         canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
     def apply_settings(self) -> None:
-        self.service.set_language(self.typing_language_var.get())
         self.apply_screen_mode()
         self.refresh_title()
         self.save_settings()
         messagebox.showinfo(self.tr("settings"), self.tr("settings_applied"))
         self.show_settings_menu()
+        
+    # =========================
+    # SETTINGS START/END SESSION
+    # =========================   
+
+    def prepare_active_session(self) -> None:
+        current_target = self.service.stats.target_text
+        current_language = self.service.stats.language
+        max_errors = self.service.stats.max_errors
+
+        # Ricrea uno stato pulito della sessione
+        self.service.stats = self.service.stats.__class__(
+            target_text=current_target,
+            language=current_language,
+            max_errors=max_errors
+        )
+
+        if self.timer_job is not None:
+            self.root.after_cancel(self.timer_job)
+            self.timer_job = None
+
+        if self.input_box is not None:
+            self.input_box.config(state="normal")
+            self.input_box.delete("1.0", "end")
+            self.input_box.focus_set()
 
     # =========================
     # SURVIVAL ACTIONS
@@ -190,22 +213,37 @@ class TypingTrainerApp:
     def load_generated_text(self) -> None:
         try:
             self.service.set_language(self.typing_language_var.get())
-            generated = self.service.generate_text(self.words_count_var.get())
+
+            # VALIDAZIONE INPUT  
+            word_count = self.words_count_var.get()
+
+            if isinstance(word_count, str):
+                if not word_count.isdigit():
+                    return
+                word_count = int(word_count)
+
+            if word_count <= 0:
+                return
+
+            generated = self.service.generate_text(word_count)
+
         except Exception as error:
             messagebox.showerror(self.tr("error"), str(error))
             return
+
+        self.prepare_active_session()
 
         if self.target_box is not None:
             self._set_target_text(generated)
 
         self._reset_ui_stats()
 
+        # UX MIGLIORIA
         if self.input_box is not None:
-            self.input_box.delete("1.0", "end")
             self.input_box.focus_set()
 
     def use_custom_text(self) -> None:
-        if self.custom_text_box is None or self.input_box is None:
+        if self.custom_text_box is None:
             return
 
         custom_text = self.custom_text_box.get("1.0", "end").strip()
@@ -214,29 +252,86 @@ class TypingTrainerApp:
             return
 
         self.service.set_custom_text(custom_text)
+        self.prepare_active_session()
         self._set_target_text(custom_text)
         self._reset_ui_stats()
-        self.input_box.delete("1.0", "end")
-        self.input_box.focus_set()
-
-    def restart_test(self) -> None:
-        if self.input_box is None:
+        
+    def import_text_file(self) -> None:
+        if self.custom_text_box is None:
             return
 
+        file_path = filedialog.askopenfilename(
+            title=self.tr("select_text_file"),
+            filetypes=[("Text files", "*.txt")]
+        )
+
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                content = file.read()
+        except Exception:
+            messagebox.showerror(self.tr("error"), self.tr("invalid_text_file"))
+            return
+
+        self.custom_text_box.delete("1.0", "end")
+        self.custom_text_box.insert("1.0", content)
+
+    def restart_test(self) -> None:
         current_target = self.service.stats.target_text
         if not current_target:
             self.load_generated_text()
             return
 
         self.service.reset_progress_only()
+        self.prepare_active_session()
         self._set_target_text(self.service.stats.target_text)
         self._reset_ui_stats()
-        self.input_box.delete("1.0", "end")
-        self.input_box.focus_set()
+
+    def end_run(self) -> None:
+        if self.input_box is None:
+            return
+
+        self.service.stats.finished = True
 
         if self.timer_job is not None:
             self.root.after_cancel(self.timer_job)
             self.timer_job = None
+
+        self.input_box.config(state="disabled")
+
+        messagebox.showinfo(
+            self.tr("session_ended"),
+            f"{self.tr('session_ended_message')}\n\n"
+            f"WPM: {self.service.stats.wpm}\n"
+            f"{self.tr('accuracy')} {self.service.stats.accuracy}%\n"
+            f"{self.tr('errors')} {self.service.stats.errors}\n"
+            f"{self.tr('error_limit')} {self.service.stats.mistakes_made} / {self.service.stats.max_errors}\n"
+            f"{self.tr('time')} {self.service.stats.elapsed_seconds:.1f} s"
+        )
+
+    def trigger_game_over(self) -> None:
+        if self.input_box is None:
+            return
+
+        self.service.stats.finished = True
+
+        if self.timer_job is not None:
+            self.root.after_cancel(self.timer_job)
+            self.timer_job = None
+
+        self.input_box.config(state="disabled")
+
+        messagebox.showinfo(
+            self.tr("game_over"),
+            f"{self.tr('game_over_message')}\n\n"
+            f"WPM: {self.service.stats.wpm}\n"
+            f"{self.tr('accuracy')} {self.service.stats.accuracy}%\n"
+            f"{self.tr('errors')} {self.service.stats.errors}\n"
+            f"{self.tr('error_limit')} {self.service.stats.mistakes_made} / {self.service.stats.max_errors}\n"
+            f"{self.tr('time')} {self.service.stats.elapsed_seconds:.1f} s"
+        )
 
     def _set_target_text(self, text: str) -> None:
         if self.target_box is None:
@@ -246,13 +341,15 @@ class TypingTrainerApp:
         self.target_box.delete("1.0", "end")
         self.target_box.insert("1.0", text)
         self.target_box.config(state="disabled")
-
+   
     def _reset_ui_stats(self) -> None:
         self.wpm_var.set("0")
         self.accuracy_var.set("100.0%")
         self.errors_var.set("0")
+        self.error_limit_var.set(f"0 / {self.service.stats.max_errors}")
         self.time_var.set("0.0 s")
         self.progress_var.set(f"0 / {len(self.service.stats.target_text)}")
+
         if self.target_box is not None:
             self._clear_highlighting()
 
@@ -267,13 +364,36 @@ class TypingTrainerApp:
         self.target_box.config(state="disabled")
 
     def on_key_release(self, event=None) -> None:
-        if self.input_box is None:
+        if self.input_box is None or self.service.stats.finished:
             return
 
+        previous_typed = self.service.stats.typed_text
         typed_text = self.input_box.get("1.0", "end-1c")
+
+        # Conta solo i nuovi caratteri aggiunti
+        if len(typed_text) > len(previous_typed):
+            added_text = typed_text[len(previous_typed):]
+            start_index = len(previous_typed)
+
+            for offset, char in enumerate(added_text):
+                target_index = start_index + offset
+                expected_char = (
+                    self.service.stats.target_text[target_index]
+                    if target_index < len(self.service.stats.target_text)
+                    else None
+                )
+
+                if expected_char is None or char != expected_char:
+                    self.service.stats.mistakes_made += 1
+
         self.service.update_typed_text(typed_text)
+
         self._refresh_stats()
         self._highlight_text()
+
+        if self.service.stats.mistakes_made >= self.service.stats.max_errors:
+            self.trigger_game_over()
+            return
 
         if self.service.stats.started and self.timer_job is None and not self.service.stats.finished:
             self._update_timer()
@@ -283,14 +403,17 @@ class TypingTrainerApp:
                 self.root.after_cancel(self.timer_job)
                 self.timer_job = None
 
+            self.input_box.config(state="disabled")
+
             messagebox.showinfo(
                 self.tr("completed"),
                 f"WPM: {self.service.stats.wpm}\n"
                 f"{self.tr('accuracy')} {self.service.stats.accuracy}%\n"
                 f"{self.tr('errors')} {self.service.stats.errors}\n"
+                f"{self.tr('error_limit')} {self.service.stats.mistakes_made} / {self.service.stats.max_errors}\n"
                 f"{self.tr('time')} {self.service.stats.elapsed_seconds:.1f} s"
             )
-
+            
     def _update_timer(self) -> None:
         if self.service.stats.started and not self.service.stats.finished:
             self.time_var.set(f"{self.service.stats.elapsed_seconds:.1f} s")
@@ -301,6 +424,7 @@ class TypingTrainerApp:
         self.wpm_var.set(str(stats.wpm))
         self.accuracy_var.set(f"{stats.accuracy}%")
         self.errors_var.set(str(stats.errors))
+        self.error_limit_var.set(f"{stats.mistakes_made} / {stats.max_errors}")
         self.time_var.set(f"{stats.elapsed_seconds:.1f} s")
         self.progress_var.set(self.service.get_progress_text())
 
@@ -318,37 +442,27 @@ class TypingTrainerApp:
 
         self.target_box.tag_configure("correct", background="#d8f3dc")
         self.target_box.tag_configure("incorrect", background="#ffccd5")
-        self.target_box.tag_configure("pending", background="#f5f5f5")
+        self.target_box.tag_configure("pending", background="#f3c96e")
 
-        correct_until = 0
+        # Evidenzia ogni carattere digitato confrontandolo con il target
         for i, char in enumerate(typed):
+            start = f"1.0 + {i} chars"
+            end = f"1.0 + {i + 1} chars"
+
             if i < len(target) and char == target[i]:
-                correct_until += 1
+                self.target_box.tag_add("correct", start, end)
             else:
-                break
+                self.target_box.tag_add("incorrect", start, end)
 
-        mismatch_start = correct_until
-        mismatch_end = min(len(typed), len(target))
-
-        if correct_until > 0:
-            self.target_box.tag_add("correct", "1.0", f"1.0 + {correct_until} chars")
-
-        if mismatch_end > mismatch_start:
-            self.target_box.tag_add(
-                "incorrect",
-                f"1.0 + {mismatch_start} chars",
-                f"1.0 + {mismatch_end} chars"
-            )
-
-        if len(target) > mismatch_end:
+        # Evidenzia il testo ancora non digitato
+        if len(target) > len(typed):
             self.target_box.tag_add(
                 "pending",
-                f"1.0 + {mismatch_end} chars",
+                f"1.0 + {len(typed)} chars",
                 f"1.0 + {len(target)} chars"
             )
 
         self.target_box.config(state="disabled")
-
 
 def main() -> None:
     root = tk.Tk()
