@@ -1,7 +1,13 @@
 {
     "app_language": "Italiano",
     "typing_language": "Italiano",
+<<<<<<< HEAD
     "screen_mode": "Maximized",
     "ui_scale": "150%",
     "words_count": 15
+=======
+    "screen_mode": "Windowed 1280x720",
+    "ui_scale": "100%",
+    "words_count": 500
+>>>>>>> 1080e11 (Surviaval mode update)
 }

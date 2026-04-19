@@ -84,11 +84,16 @@ class SurvivalView:
         main_frame.grid(row=1, column=0, sticky="nsew")
         main_frame.columnconfigure(0, weight=3)
         main_frame.columnconfigure(1, weight=2)
+<<<<<<< HEAD
 
         # solo una riga "spacer" finale espandibile
         main_frame.rowconfigure(4, weight=1)
         main_frame.rowconfigure(5, weight=2)
         
+=======
+        main_frame.rowconfigure(5, weight=1)
+
+>>>>>>> 1080e11 (Surviaval mode update)
         # -------------------------
         # LEFT COLUMN
         # -------------------------
@@ -116,18 +121,201 @@ class SurvivalView:
         )
         self.app.target_box.grid(row=0, column=0, sticky="ew")
 
+<<<<<<< HEAD
         target_scrollbar = ttk.Scrollbar(target_container, orient="vertical", command=self.app.target_box.yview)
         target_scrollbar.grid(row=0, column=1, sticky="ns")
         self.app.target_box.configure(yscrollcommand=target_scrollbar.set)
 
+=======
+        target_scrollbar = ttk.Scrollbar(
+            target_container,
+            orient="vertical",
+            command=self.app.target_box.yview
+        )
+        target_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.app.target_box.configure(yscrollcommand=target_scrollbar.set)
+
+        # =========================
+        # KEYBOARD UNDER TARGET
+        # =========================
+        keyboard_container = ttk.LabelFrame(
+            main_frame,
+            text="Tastiera",
+            padding=self.app.scaled(10)
+        )
+        keyboard_container.grid(
+            row=2,
+            column=0,
+            sticky="ew",
+            padx=(0, self.app.scaled(16)),
+            pady=(self.app.scaled(12), 0)
+        )
+        keyboard_container.columnconfigure(0, weight=1)
+
+        keyboard_frame = tk.Frame(
+            keyboard_container,
+            bg="#2b2b2b",
+            bd=2,
+            relief="solid",
+            padx=self.app.scaled(10),
+            pady=self.app.scaled(10),
+        )
+        keyboard_frame.grid(row=0, column=0, sticky="w")
+
+        self.key_widgets = {}
+
+        def make_key(parent, key, label, width):
+            btn = tk.Label(
+                parent,
+                text=label,
+                width=width,
+                height=2,
+                bg="#3a3a3a",
+                fg="#f2f2f2",
+                relief="raised",
+                bd=1,
+                font=("Segoe UI", self.app.scaled(9), "bold"),
+                activebackground="#3a3a3a",
+                activeforeground="#f2f2f2",
+            )
+            self.key_widgets[key] = btn
+            return btn
+
+        # Riga 1
+        row1 = tk.Frame(keyboard_frame, bg="#2b2b2b")
+        row1.grid(row=0, column=0, pady=self.app.scaled(2), sticky="w")
+
+        row1_keys = [
+            ("backslash", "\\", 4),
+            ("1", "1", 4),
+            ("2", "2", 4),
+            ("3", "3", 4),
+            ("4", "4", 4),
+            ("5", "5", 4),
+            ("6", "6", 4),
+            ("7", "7", 4),
+            ("8", "8", 4),
+            ("9", "9", 4),
+            ("0", "0", 4),
+            ("apostrophe", "'", 4),
+            ("igrave", "ì", 4),
+            ("backspace", "BACK", 8),
+        ]
+        for key, label, width in row1_keys:
+            make_key(row1, key, label, width).pack(side="left", padx=self.app.scaled(2))
+
+        # Riga 2
+        row2 = tk.Frame(keyboard_frame, bg="#2b2b2b")
+        row2.grid(row=1, column=0, pady=self.app.scaled(2), sticky="w")
+
+        row2_keys = [
+            ("tab", "TAB", 6),
+            ("q", "Q", 4),
+            ("w", "W", 4),
+            ("e", "E", 4),
+            ("r", "R", 4),
+            ("t", "T", 4),
+            ("y", "Y", 4),
+            ("u", "U", 4),
+            ("i", "I", 4),
+            ("o", "O", 4),
+            ("p", "P", 4),
+            ("egrave", "è", 4),
+            ("plus", "+", 4),
+            ("enter", "ENTER", 8),
+        ]
+        for key, label, width in row2_keys:
+            make_key(row2, key, label, width).pack(side="left", padx=self.app.scaled(2))
+
+        # Riga 3
+        row3 = tk.Frame(keyboard_frame, bg="#2b2b2b")
+        row3.grid(row=2, column=0, pady=self.app.scaled(2), sticky="w")
+
+        row3_keys = [
+            ("capslock", "CAPS", 7),
+            ("a", "A", 4),
+            ("s", "S", 4),
+            ("d", "D", 4),
+            ("f", "F", 4),
+            ("g", "G", 4),
+            ("h", "H", 4),
+            ("j", "J", 4),
+            ("k", "K", 4),
+            ("l", "L", 4),
+            ("ograve", "ò", 4),
+            ("agrave", "à", 4),
+            ("ugrave", "ù", 4),
+            ("shift_r", "SHIFT", 10),
+        ]
+        for key, label, width in row3_keys:
+            make_key(row3, key, label, width).pack(side="left", padx=self.app.scaled(2))
+
+        # Riga 4
+        row4 = tk.Frame(keyboard_frame, bg="#2b2b2b")
+        row4.grid(row=3, column=0, pady=self.app.scaled(2), sticky="w")
+
+        row4_keys = [
+            ("shift_l", "SHIFT", 9),
+            ("less", "<", 4),
+            ("z", "Z", 4),
+            ("x", "X", 4),
+            ("c", "C", 4),
+            ("v", "V", 4),
+            ("b", "B", 4),
+            ("n", "N", 4),
+            ("m", "M", 4),
+            ("comma", ",", 4),
+            ("period", ".", 4),
+            ("minus", "-", 4),
+        ]
+        for key, label, width in row4_keys:
+            make_key(row4, key, label, width).pack(side="left", padx=self.app.scaled(2))
+
+        make_key(row4, "up", "↑", 4).pack(
+            side="left",
+            padx=(self.app.scaled(22), self.app.scaled(2))
+        )
+
+        # Riga 5
+        row5 = tk.Frame(keyboard_frame, bg="#2b2b2b")
+        row5.grid(row=4, column=0, pady=self.app.scaled(2), sticky="w")
+
+        row5_keys = [
+            ("ctrl_l", "CTRL", 6),
+            ("fn", "FN", 5),
+            ("super", "WIN", 5),
+            ("alt_l", "ALT", 5),
+            ("space", "SPACE", 24),
+            ("altgr", "ALTGR", 6),
+            ("ctrl_r", "CTRL", 6),
+            ("left", "←", 4),
+            ("down", "↓", 4),
+            ("right", "→", 4),
+        ]
+        for key, label, width in row5_keys:
+            make_key(row5, key, label, width).pack(side="left", padx=self.app.scaled(2))
+
+        self.app.key_widgets = self.key_widgets
+
+        # -------------------------
+        # INPUT UNDER KEYBOARD
+        # -------------------------
+>>>>>>> 1080e11 (Surviaval mode update)
         ttk.Label(
             main_frame,
             text=self.app.tr("your_input"),
             font=("Segoe UI", self.app.scaled(12), "bold")
+<<<<<<< HEAD
         ).grid(row=2, column=0, sticky="w", pady=(self.app.scaled(14), self.app.scaled(8)))
 
         input_container = ttk.Frame(main_frame)
         input_container.grid(row=3, column=0, sticky="ew", padx=(0, self.app.scaled(16)))
+=======
+        ).grid(row=3, column=0, sticky="w", pady=(self.app.scaled(14), self.app.scaled(8)))
+
+        input_container = ttk.Frame(main_frame)
+        input_container.grid(row=4, column=0, sticky="ew", padx=(0, self.app.scaled(16)))
+>>>>>>> 1080e11 (Surviaval mode update)
         input_container.columnconfigure(0, weight=1)
 
         self.app.input_box = tk.Text(
@@ -143,6 +331,7 @@ class SurvivalView:
         self.app.input_box.grid(row=0, column=0, sticky="ew")
         self.app.input_box.bind("<KeyRelease>", self.app.on_key_release)
 
+<<<<<<< HEAD
         input_scrollbar = ttk.Scrollbar(input_container, orient="vertical", command=self.app.input_box.yview)
         input_scrollbar.grid(row=0, column=1, sticky="ns")
         self.app.input_box.configure(yscrollcommand=input_scrollbar.set)
@@ -168,6 +357,17 @@ class SurvivalView:
             foreground="#888"
         )
         self.bottom_placeholder.grid(row=0, column=0, sticky="nsew")
+=======
+        input_scrollbar = ttk.Scrollbar(
+            input_container,
+            orient="vertical",
+            command=self.app.input_box.yview
+        )
+        input_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.app.input_box.configure(yscrollcommand=input_scrollbar.set)
+
+        ttk.Frame(main_frame).grid(row=5, column=0, sticky="nsew")
+>>>>>>> 1080e11 (Surviaval mode update)
 
         # -------------------------
         # RIGHT COLUMN
@@ -177,7 +377,11 @@ class SurvivalView:
             text=self.app.tr("stats"),
             padding=self.app.scaled(14)
         )
+<<<<<<< HEAD
         stats_frame.grid(row=0, column=1, rowspan=2, sticky="new")
+=======
+        stats_frame.grid(row=0, column=1, rowspan=3, sticky="new")
+>>>>>>> 1080e11 (Surviaval mode update)
         stats_frame.columnconfigure(1, weight=1)
 
         self.app._add_stat_row(stats_frame, 0, self.app.tr("wpm"), self.app.wpm_var)
@@ -192,7 +396,11 @@ class SurvivalView:
             text=self.app.tr("custom_text"),
             padding=self.app.scaled(14)
         )
+<<<<<<< HEAD
         custom_frame.grid(row=3, column=1, sticky="new")
+=======
+        custom_frame.grid(row=4, column=1, sticky="new")
+>>>>>>> 1080e11 (Surviaval mode update)
         custom_frame.columnconfigure(0, weight=1)
         custom_frame.rowconfigure(2, weight=1)
 
@@ -231,7 +439,15 @@ class SurvivalView:
         )
         self.app.custom_text_box.grid(row=0, column=0, sticky="nsew")
 
+<<<<<<< HEAD
         custom_scrollbar = ttk.Scrollbar(custom_container, orient="vertical", command=self.app.custom_text_box.yview)
+=======
+        custom_scrollbar = ttk.Scrollbar(
+            custom_container,
+            orient="vertical",
+            command=self.app.custom_text_box.yview
+        )
+>>>>>>> 1080e11 (Surviaval mode update)
         custom_scrollbar.grid(row=0, column=1, sticky="ns")
         self.app.custom_text_box.configure(yscrollcommand=custom_scrollbar.set)
 

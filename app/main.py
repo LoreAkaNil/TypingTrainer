@@ -21,6 +21,10 @@ class TypingTrainerApp:
         self.settings_manager = SettingsManager(self.base_dir)
 
         self.timer_job = None
+<<<<<<< HEAD
+=======
+        self.key_reset_job = None
+>>>>>>> 1080e11 (Surviaval mode update)
 
         self.language_files = LANGUAGE_FILES
         self.ui_translations = UI_TRANSLATIONS
@@ -41,6 +45,10 @@ class TypingTrainerApp:
         self.target_box = None
         self.input_box = None
         self.custom_text_box = None
+<<<<<<< HEAD
+=======
+        self.key_widgets = {}
+>>>>>>> 1080e11 (Surviaval mode update)
 
         self.load_settings()
 
@@ -55,9 +63,12 @@ class TypingTrainerApp:
 
         self.root.bind("<Escape>", self.on_escape)
 
+<<<<<<< HEAD
     # =========================
     # SETTINGS PERSISTENCE
     # =========================
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
     def load_settings(self) -> None:
         settings = self.settings_manager.load()
         self.app_language_var.set(settings["app_language"])
@@ -78,9 +89,12 @@ class TypingTrainerApp:
         except Exception as error:
             messagebox.showerror(self.tr("error"), f"{self.tr('settings_save_error')}:\n{error}")
 
+<<<<<<< HEAD
     # =========================
     # TRANSLATIONS / SCALE
     # =========================
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
     def tr(self, key: str) -> str:
         lang = self.app_language_var.get()
         return self.ui_translations.get(lang, self.ui_translations["English"]).get(key, key)
@@ -100,9 +114,12 @@ class TypingTrainerApp:
     def refresh_title(self) -> None:
         self.root.title(self.tr("app_title"))
 
+<<<<<<< HEAD
     # =========================
     # SCREEN
     # =========================
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
     def apply_screen_mode(self) -> None:
         mode = self.screen_mode_var.get()
 
@@ -124,9 +141,12 @@ class TypingTrainerApp:
             self.root.geometry("1280x720")
             self.save_settings()
 
+<<<<<<< HEAD
     # =========================
     # FRAME MGMT
     # =========================
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
     def clear_current_frame(self) -> None:
         if self.current_frame is not None:
             self.current_frame.destroy()
@@ -135,6 +155,10 @@ class TypingTrainerApp:
         self.target_box = None
         self.input_box = None
         self.custom_text_box = None
+<<<<<<< HEAD
+=======
+        self.key_widgets = {}
+>>>>>>> 1080e11 (Surviaval mode update)
 
     def show_main_menu(self) -> None:
         self.clear_current_frame()
@@ -151,11 +175,15 @@ class TypingTrainerApp:
         self.refresh_title()
         self.current_frame = SurvivalView(self).build()
         self.load_generated_text()
+<<<<<<< HEAD
         
     # =========================
     # SETTINGS ACTIONS
     # =========================
     
+=======
+
+>>>>>>> 1080e11 (Surviaval mode update)
     def bind_mousewheel(self, canvas: tk.Canvas) -> None:
         def _on_mousewheel(event):
             canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
@@ -168,17 +196,23 @@ class TypingTrainerApp:
         self.save_settings()
         messagebox.showinfo(self.tr("settings"), self.tr("settings_applied"))
         self.show_settings_menu()
+<<<<<<< HEAD
         
     # =========================
     # SETTINGS START/END SESSION
     # =========================   
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
 
     def prepare_active_session(self) -> None:
         current_target = self.service.stats.target_text
         current_language = self.service.stats.language
         max_errors = self.service.stats.max_errors
 
+<<<<<<< HEAD
         # Ricrea uno stato pulito della sessione
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
         self.service.stats = self.service.stats.__class__(
             target_text=current_target,
             language=current_language,
@@ -189,14 +223,26 @@ class TypingTrainerApp:
             self.root.after_cancel(self.timer_job)
             self.timer_job = None
 
+<<<<<<< HEAD
+=======
+        if self.key_reset_job is not None:
+            self.root.after_cancel(self.key_reset_job)
+            self.key_reset_job = None
+
+        self._reset_keyboard_highlight()
+
+>>>>>>> 1080e11 (Surviaval mode update)
         if self.input_box is not None:
             self.input_box.config(state="normal")
             self.input_box.delete("1.0", "end")
             self.input_box.focus_set()
 
+<<<<<<< HEAD
     # =========================
     # SURVIVAL ACTIONS
     # =========================
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
     def _add_stat_row(self, parent: ttk.Widget, row: int, label: str, variable: tk.StringVar) -> None:
         ttk.Label(parent, text=label, font=("Segoe UI", self.scaled(12), "bold")).grid(
             row=row, column=0, sticky="w", pady=self.scaled(8)
@@ -214,7 +260,10 @@ class TypingTrainerApp:
         try:
             self.service.set_language(self.typing_language_var.get())
 
+<<<<<<< HEAD
             # VALIDAZIONE INPUT  
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
             word_count = self.words_count_var.get()
 
             if isinstance(word_count, str):
@@ -238,7 +287,10 @@ class TypingTrainerApp:
 
         self._reset_ui_stats()
 
+<<<<<<< HEAD
         # UX MIGLIORIA
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
         if self.input_box is not None:
             self.input_box.focus_set()
 
@@ -255,7 +307,11 @@ class TypingTrainerApp:
         self.prepare_active_session()
         self._set_target_text(custom_text)
         self._reset_ui_stats()
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 1080e11 (Surviaval mode update)
     def import_text_file(self) -> None:
         if self.custom_text_box is None:
             return
@@ -341,7 +397,11 @@ class TypingTrainerApp:
         self.target_box.delete("1.0", "end")
         self.target_box.insert("1.0", text)
         self.target_box.config(state="disabled")
+<<<<<<< HEAD
    
+=======
+
+>>>>>>> 1080e11 (Surviaval mode update)
     def _reset_ui_stats(self) -> None:
         self.wpm_var.set("0")
         self.accuracy_var.set("100.0%")
@@ -363,14 +423,105 @@ class TypingTrainerApp:
         self.target_box.tag_delete("pending")
         self.target_box.config(state="disabled")
 
+<<<<<<< HEAD
     def on_key_release(self, event=None) -> None:
+=======
+    def _reset_keyboard_highlight(self) -> None:
+        if not self.key_widgets:
+            return
+
+        for btn in self.key_widgets.values():
+            btn.config(bg="#3a3a3a", fg="#f2f2f2")
+
+    def _map_event_to_key(self, event) -> str | None:
+        if event is None:
+            return None
+
+        keysym = event.keysym
+        char = event.char
+
+        special_map = {
+            "BackSpace": "backspace",
+            "Tab": "tab",
+            "Return": "enter",
+            "Shift_L": "shift_l",
+            "Shift_R": "shift_r",
+            "Control_L": "ctrl_l",
+            "Control_R": "ctrl_r",
+            "Alt_L": "alt_l",
+            "Alt_R": "altgr",
+            "Left": "left",
+            "Right": "right",
+            "Up": "up",
+            "Down": "down",
+            "space": "space",
+            "Caps_Lock": "capslock",
+            "Super_L": "super",
+            "Super_R": "super",
+        }
+
+        if keysym in special_map:
+            return special_map[keysym]
+
+        if len(char) == 1:
+            char_map = {
+                "\\": "backslash",
+                "'": "apostrophe",
+                "+": "plus",
+                ",": "comma",
+                ".": "period",
+                "-": "minus",
+                "<": "less",
+                "ì": "igrave",
+                "è": "egrave",
+                "ò": "ograve",
+                "à": "agrave",
+                "ù": "ugrave",
+            }
+
+            lowered = char.lower()
+
+            if lowered in char_map:
+                return char_map[lowered]
+
+            if lowered.isalpha() or lowered.isdigit():
+                return lowered
+
+        return None
+
+    def _highlight_key(self, event=None) -> None:
+        if not self.key_widgets:
+            return
+
+        lookup = self._map_event_to_key(event)
+        if lookup is None:
+            return
+
+        self._reset_keyboard_highlight()
+
+        btn = self.key_widgets.get(lookup)
+        if btn is not None:
+            btn.config(bg="#4cc9f0", fg="#111111")
+
+            if self.key_reset_job is not None:
+                self.root.after_cancel(self.key_reset_job)
+
+            self.key_reset_job = self.root.after(120, self._reset_keyboard_highlight)
+
+    def on_key_release(self, event=None) -> None:
+        self._highlight_key(event)
+
+>>>>>>> 1080e11 (Surviaval mode update)
         if self.input_box is None or self.service.stats.finished:
             return
 
         previous_typed = self.service.stats.typed_text
         typed_text = self.input_box.get("1.0", "end-1c")
 
+<<<<<<< HEAD
         # Conta solo i nuovi caratteri aggiunti
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
         if len(typed_text) > len(previous_typed):
             added_text = typed_text[len(previous_typed):]
             start_index = len(previous_typed)
@@ -413,7 +564,11 @@ class TypingTrainerApp:
                 f"{self.tr('error_limit')} {self.service.stats.mistakes_made} / {self.service.stats.max_errors}\n"
                 f"{self.tr('time')} {self.service.stats.elapsed_seconds:.1f} s"
             )
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> 1080e11 (Surviaval mode update)
     def _update_timer(self) -> None:
         if self.service.stats.started and not self.service.stats.finished:
             self.time_var.set(f"{self.service.stats.elapsed_seconds:.1f} s")
@@ -444,7 +599,10 @@ class TypingTrainerApp:
         self.target_box.tag_configure("incorrect", background="#ffccd5")
         self.target_box.tag_configure("pending", background="#f3c96e")
 
+<<<<<<< HEAD
         # Evidenzia ogni carattere digitato confrontandolo con il target
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
         for i, char in enumerate(typed):
             start = f"1.0 + {i} chars"
             end = f"1.0 + {i + 1} chars"
@@ -454,7 +612,10 @@ class TypingTrainerApp:
             else:
                 self.target_box.tag_add("incorrect", start, end)
 
+<<<<<<< HEAD
         # Evidenzia il testo ancora non digitato
+=======
+>>>>>>> 1080e11 (Surviaval mode update)
         if len(target) > len(typed):
             self.target_box.tag_add(
                 "pending",
@@ -464,6 +625,10 @@ class TypingTrainerApp:
 
         self.target_box.config(state="disabled")
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1080e11 (Surviaval mode update)
 def main() -> None:
     root = tk.Tk()
     app = TypingTrainerApp(root)
